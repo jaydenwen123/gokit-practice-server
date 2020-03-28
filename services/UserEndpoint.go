@@ -10,6 +10,7 @@ import (
 type UserRequest struct {
 	Uid    int64  `json:"uid"`
 	Method string `json:"method"`
+	Port   string `json:"port"`
 }
 
 type UserResponse struct {
@@ -17,7 +18,7 @@ type UserResponse struct {
 }
 
 //MakeUserEndpoint 创建endpoint
-func MakeUserEndpoint(service IUserService) endpoint.Endpoint {
+func MakeUserEndpoint(service IUserService,port int) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req, ok := request.(*UserRequest)
 		result := ""
@@ -41,6 +42,6 @@ func MakeUserEndpoint(service IUserService) endpoint.Endpoint {
 				result = fmt.Sprintf("delete user:%d success", req.Uid)
 			}
 		}
-		return &UserResponse{Result: result}, nil
+		return &UserResponse{Result: result + fmt.Sprintf("[from server]--><%d>",port)}, nil
 	}
 }

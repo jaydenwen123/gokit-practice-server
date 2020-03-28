@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/jaydenwen123/gokit-practice-server/consul_util"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,28 +15,28 @@ import (
 	"github.com/jaydenwen123/gokit-practice-server/services"
 )
 
-var port int
-var name string
-var id string
+var Port int
+var Name string
+var Id string
 
 func main() {
 
 	//从控制台接收参数
-	flag.IntVar(&port, "port", 3456, "please the server listen port")
-	flag.StringVar(&name, "name", "", "please the server register name")
+	flag.IntVar(&Port, "port", 3456, "please the server listen Port")
+	flag.StringVar(&Name, "name", "", "please the server register Name")
 	flag.Parse()
-	if port == 0 {
-		panic("the port must not empty...")
+	if Port == 0 {
+		panic("the Port must not empty...")
 	}
 
-	if name == "" || len(name) == 0 {
-		panic("the name must not empty...")
+	if Name == "" || len(Name) == 0 {
+		panic("the Name must not empty...")
 	}
 
-	id = genServiceId(name)
+	Id = consul_util.GenServiceId(Name)
 
 	userService := &services.UserService{}
-	endpoint := services.MakeUserEndpoint(userService)
+	endpoint := services.MakeUserEndpoint(userService,Port)
 	handler := http2.NewServer(endpoint, services.DecodeRequest, services.EncodeResponsefunc)
 	router := mux.NewRouter()
 	router.Handle("/user/{uid:\\d+}", handler)
@@ -55,28 +56,28 @@ func main() {
 	//2.kill -9 +pid
 	//直接剔除服务
 	//3.程序启动错误
-	errChan:=make(chan  error,1)
+	errChan := make(chan error, 1)
 	go func() {
 		signalChan := make(chan os.Signal, 1)
-		signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM,syscall.SIGKILL)
-		errChan<-fmt.Errorf("%v",<-signalChan)
+		signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+		errChan <- fmt.Errorf("%v", <-signalChan)
 	}()
 
 	go func() {
 		//注册服务
 		//RegisterService("myserver2","userService","127.0.0.1",2346)
-		RegisterService(id, name, "127.0.0.1", port)
+		consul_util.RegisterService(Id, Name, "127.0.0.1", Port)
 		//剔除服务
 		logs.Debug("the server is starting.....")
-		err := http.ListenAndServe(fmt.Sprintf(":%d", port), router)
+		err := http.ListenAndServe(fmt.Sprintf(":%d", Port), router)
 		if err != nil {
 			logs.Error("the server started error:", err.Error())
-			errChan<-err
+			errChan <- err
 		}
 	}()
 
 	<-errChan
 	logs.Error("the server is exited....")
-	DeRegisterService(id)
+	consul_util.DeRegisterService(Id)
 	logs.Debug("DeRegisterService from the consul ....")
 }

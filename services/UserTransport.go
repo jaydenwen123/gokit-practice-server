@@ -15,6 +15,7 @@ func DecodeRequest(ctx context.Context, req *http.Request) (request interface{},
 	//从request中获取参数
 	//改造这块
 	//uidStr := req.URL.Query().Get("uid")
+	logs.Debug("the port:",req.URL.Port())
 	vars := mux.Vars(req)
 	uidStr, ok := vars["uid"]
 	uid := int64(0)

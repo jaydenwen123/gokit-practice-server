@@ -1,4 +1,4 @@
-package main
+package consul_util
 
 import (
 	"fmt"
@@ -9,8 +9,15 @@ import (
 
 var client *consulapi.Client
 
+
+
+
+
+
 func init() {
 	client = makeClient()
+
+
 }
 
 //服务注册
@@ -128,7 +135,7 @@ func DeRegisterService(serviceId string) {
 	logs.Debug("the service is deregister success....")
 }
 
-func genServiceId(name string) string {
+func GenServiceId(name string) string {
 	uuid, err := uuid.GenerateUUID()
 	if err != nil {
 		logs.Error("the genServiceId occurs error:", err)
