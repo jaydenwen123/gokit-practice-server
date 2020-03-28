@@ -5,12 +5,22 @@ import (
 	"github.com/astaxie/beego/logs"
 	consulapi "github.com/hashicorp/consul/api"
 	"github.com/hashicorp/go-uuid"
-	"github.com/jaydenwen123/go-util"
 )
+
+var client *consulapi.Client
+
+func init() {
+	client = makeClient()
+}
 
 //服务注册
 func RegisterService(id, name, address string, port int, ) {
-	client := makeClient()
+	if client==nil {
+		client=makeClient()
+	}
+	if client==nil{
+		panic("the client is inited error")
+	}
 	agent := client.Agent()
 	reg := &consulapi.AgentServiceRegistration{
 		Name:    name,
@@ -27,20 +37,24 @@ func RegisterService(id, name, address string, port int, ) {
 		logs.Error("ServiceRegister err: %v", err)
 	}
 
-	services, err := agent.Services()
-	if err != nil {
-		logs.Error("err: %v", err)
-	}
-	logs.Debug("the services:%s", util.Obj2JsonStr(services))
-	//if _, ok := services["myserver2"]; !ok {
-	//logs.Error("missing service: %#v", services)
-	//}
-	checks, err := agent.Checks()
+	/*
+		services, err := agent.Services()
+		if err != nil {
+			logs.Error("err: %v", err)
+		}
+		logs.Debug("the services:%s", util.Obj2JsonStr(services))
+		//if _, ok := services["myserver2"]; !ok {
+		//logs.Error("missing service: %#v", services)
+		//}
+		checks, err := agent.Checks()
 
-	if err != nil {
-		logs.Error("get checks err: %v", err)
-	}
-	logs.Debug("the checks:%s", util.Obj2JsonStr(checks))
+		if err != nil {
+			logs.Error("get checks err: %v", err)
+		}
+		logs.Debug("the checks:%s", util.Obj2JsonStr(checks))
+
+	*/
+
 	//chk, ok := checks["service:foo"]
 	//if !ok {
 	//	logs.Error("missing check: %v", checks)
@@ -68,7 +82,7 @@ func RegisterService(id, name, address string, port int, ) {
 	//require.Equal(t, HealthCritical, state)
 	//require.Equal(t, 8000, outs[0].Service.Port)
 
-	if err = agent.ServiceDeregister("foo"); err != nil {
+	if err := agent.ServiceDeregister("foo"); err != nil {
 		logs.Error("the ServiceDeregister failed  err: %v", err)
 	} else {
 		logs.Debug("the ServiceDeregister success...")
@@ -93,8 +107,25 @@ func makeClientWithConfig(cb1 configCallback) *consulapi.Client {
 	client, err := consulapi.NewClient(conf)
 	if err != nil {
 		logs.Error("new consul Client  err: %v", err)
+		return  nil
 	}
 	return client
+}
+
+//DeRegisterService 移除该服务
+func DeRegisterService(serviceId string) {
+	if client == nil {
+		client = makeClient()
+	}
+	if client==nil{
+		panic("the client is inited error")
+	}
+	agent := client.Agent()
+	err := agent.ServiceDeregister(serviceId)
+	if err != nil {
+		logs.Error("ServiceDeregister occurs error:",err.Error())
+	}
+	logs.Debug("the service is deregister success....")
 }
 
 func genServiceId(name string) string {
