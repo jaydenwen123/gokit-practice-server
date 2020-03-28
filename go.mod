@@ -13,6 +13,7 @@ require (
 	github.com/hashicorp/go-immutable-radix v1.1.0 // indirect
 	github.com/hashicorp/go-msgpack v0.5.5 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
+	github.com/hashicorp/go-uuid v1.0.1
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/hashicorp/memberlist v0.1.6 // indirect
 	github.com/hashicorp/serf v0.8.5 // indirect
